@@ -36,8 +36,12 @@ export default function StudentsPage({
   const router = useRouter();
   const { classId } = router.query;
 
+  const pageSizeDefault = 100;
   const [page] = useQueryState("page", parseAsInteger.withDefault(1));
-  const [pageSize] = useQueryState("pageSize", parseAsInteger.withDefault(10));
+  const [pageSize] = useQueryState(
+    "pageSize",
+    parseAsInteger.withDefault(pageSizeDefault),
+  );
   const [searchQuery] = useQueryState("query", { defaultValue: "" });
 
   const { data: selectedClass, isLoading: isLoadingClass } = useGetClass(
