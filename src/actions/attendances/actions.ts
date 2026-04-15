@@ -119,9 +119,9 @@ export async function createAttendanceRecord(
     console.error("Supabase check existing record error:", checkError);
   }
 
-  if (existingRecord) {
-    throw new Error("Já existe um registro de presença para esta turma nesta data.");
-  }
+  // if (existingRecord) {
+  //   throw new Error("Já existe um registro de presença para esta turma nesta data.");
+  // }
 
   // 1. Create the record
   const { data: record, error: recordError } = await supabase
@@ -193,9 +193,9 @@ export async function updateAttendanceRecord(
       console.error("Supabase check existing record error:", checkError);
     }
 
-    if (existingRecord) {
-      throw new Error("Já existe um registro de presença para esta turma nesta data.");
-    }
+    // if (existingRecord) {
+    //   throw new Error("Já existe um registro de presença para esta turma nesta data.");
+    // }
   }
 
   // 1. Update the record date

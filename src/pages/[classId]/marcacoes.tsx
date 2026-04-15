@@ -200,21 +200,21 @@ export default function AttendancePage({
       ? editingRecord.date.split("T")[0] !== date
       : true;
 
-    if (dateChanged && date.length === 10) {
-      setIsValidatingDate(true);
-      try {
-        const exists = await checkAttendanceExists(classId as string, date);
-        if (exists) {
-          setSaveError(
-            "Já existe um registro de presença para esta turma nesta data.",
-          );
-        }
-      } catch (error) {
-        console.error("Error checking date:", error);
-      } finally {
-        setIsValidatingDate(false);
-      }
-    }
+    // if (dateChanged && date.length === 10) {
+    //   setIsValidatingDate(true);
+    //   try {
+    //     const exists = await checkAttendanceExists(classId as string, date);
+    //     if (exists) {
+    //       setSaveError(
+    //         "Já existe um registro de presença para esta turma nesta data.",
+    //       );
+    //     }
+    //   } catch (error) {
+    //     console.error("Error checking date:", error);
+    //   } finally {
+    //     setIsValidatingDate(false);
+    //   }
+    // }
   };
 
   const handleNextStep = async () => {
