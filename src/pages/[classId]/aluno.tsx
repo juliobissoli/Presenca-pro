@@ -1,5 +1,6 @@
 import Submenu from "@/src/actions/Submenu";
 import { Layout } from "@/src/components/Layout";
+import { StudentDetail } from "@/src/components/studants/student-detail";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
 import {
@@ -9,6 +10,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/src/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/src/components/ui/dropdown-menu";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 import { useGetClass } from "@/src/hooks/classes";
@@ -19,7 +26,7 @@ import {
   useUpdateStudent,
 } from "@/src/hooks/students";
 import { Student, User } from "@/src/types";
-import { Edit2, Plus, Trash2, User as UserIcon } from "lucide-react";
+import { Edit2, Eye, MoreVertical, Plus, Trash2, User as UserIcon } from "lucide-react";
 import { useRouter } from "next/router";
 import { parseAsInteger, useQueryState } from "nuqs";
 import * as React from "react";
@@ -61,10 +68,10 @@ export default function StudentsPage({
 
   const [isCreateStudentOpen, setIsCreateStudentOpen] = React.useState(false);
   const [newStudentName, setNewStudentName] = React.useState("");
-  const [editingStudent, setEditingStudent] = React.useState<Student | null>(
-    null,
-  );
+  const [editingStudent, setEditingStudent] = React.useState<Student | null>(null);
   const [saveError, setSaveError] = React.useState<string | null>(null);
+  const [detailStudent, setDetailStudent] = React.useState<Student | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = React.useState(false);
 
   const handleCreateStudent = async () => {
     if (!newStudentName.trim() || !classId) return;
@@ -151,27 +158,38 @@ export default function StudentsPage({
                         </div>
                         <span className="font-medium">{student.name}</span>
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setEditingStudent(student);
-                            setNewStudentName(student.name);
-                            setIsCreateStudentOpen(true);
-                          }}
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-rose-500"
-                          onClick={() => handleDeleteStudent(student.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setDetailStudent(student);
+                              setIsDetailOpen(true);
+                            }}
+                          >
+                            <Eye className="mr-2 h-4 w-4" /> Ver dados
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setEditingStudent(student);
+                              setNewStudentName(student.name);
+                              setIsCreateStudentOpen(true);
+                            }}
+                          >
+                            <Edit2 className="mr-2 h-4 w-4" /> Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-rose-500 focus:text-rose-500"
+                            onClick={() => handleDeleteStudent(student.id)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </CardContent>
                   </Card>
                 ))}
@@ -188,6 +206,16 @@ export default function StudentsPage({
           </div>
         </div>
       </div>
+
+      <StudentDetail
+        student={detailStudent}
+        classId={classId as string}
+        isOpen={isDetailOpen}
+        onClose={() => {
+          setIsDetailOpen(false);
+          setDetailStudent(null);
+        }}
+      />
 
       <Dialog
         open={isCreateStudentOpen}

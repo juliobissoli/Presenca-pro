@@ -114,3 +114,85 @@ export async function deleteStudent(id: string, classId: string): Promise<void> 
     throw new Error(error.message || "Erro ao excluir aluno no banco de dados");
   }
 }
+
+export interface GetStudentAttendanceSummaryParams {
+  studentId: string;
+  classId: string;
+  startDate: string;
+  endDate: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface StudentAttendanceEntry {
+  date: string;
+  isPresent: boolean;
+  observation?: string;
+}
+
+export interface GetStudentAttendanceSummaryResponse {
+  totalPresent: number;
+  totalAbsent: number;
+  entries: StudentAttendanceEntry[];
+  totalEntries: number;
+  page: number;
+  pageSize: number;
+}
+
+export async function getStudentAttendanceSummary(
+  params: GetStudentAttendanceSummaryParams,
+): Promise<GetStudentAttendanceSummaryResponse> {
+  const { studentId, classId, startDate, endDate, page = 1, pageSize = 10 } = params;
+
+  // Step 1: Get all attendance records for the class in the date range
+  const { data: records, error: recordsError } = await supabase
+    .from("attendance_records")
+    .select("id, date")
+    .eq("class_id", classId)
+    .gte("date", startDate)
+    .lte("date", endDate)
+    .order("date", { ascending: false });
+
+  if (recordsError) {
+    console.error("Supabase fetch records error:", recordsError);
+    throw new Error(recordsError.message || "Erro ao buscar registros de presença");
+  }
+
+  if (!records || records.length === 0) {
+    return { totalPresent: 0, totalAbsent: 0, entries: [], totalEntries: 0, page, pageSize };
+  }
+
+  const recordIds = records.map((r: any) => r.id);
+  const recordDateMap = new Map<string, string>(records.map((r: any) => [r.id, r.date]));
+
+  // Step 2: Get all entries for this student in those records
+  const { data: entries, error: entriesError } = await supabase
+    .from("attendance_entries")
+    .select("id, record_id, is_present, observation")
+    .eq("student_id", studentId)
+    .in("record_id", recordIds);
+
+  if (entriesError) {
+    console.error("Supabase fetch entries error:", entriesError);
+    throw new Error(entriesError.message || "Erro ao buscar marcações do aluno");
+  }
+
+  const allEntries = (entries || [])
+    .map((e: any) => ({
+      isPresent: e.is_present as boolean,
+      observation: (e.observation as string) || undefined,
+      date: recordDateMap.get(e.record_id) || "",
+    }))
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  const totalPresent = allEntries.filter((e) => e.isPresent).length;
+  const totalAbsent = allEntries.filter((e) => !e.isPresent).length;
+  const totalEntries = allEntries.length;
+
+  const start = (page - 1) * pageSize;
+  const pagedEntries: StudentAttendanceEntry[] = allEntries
+    .slice(start, start + pageSize)
+    .map((e) => ({ date: e.date, isPresent: e.isPresent, observation: e.observation }));
+
+  return { totalPresent, totalAbsent, entries: pagedEntries, totalEntries, page, pageSize };
+}

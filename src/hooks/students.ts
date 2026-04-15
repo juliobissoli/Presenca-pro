@@ -1,11 +1,14 @@
 import * as React from "react";
-import { 
-  getStudentsByClass, 
-  GetStudentsParams, 
+import {
+  getStudentsByClass,
+  GetStudentsParams,
   GetStudentsResponse,
   createStudent,
   updateStudent,
-  deleteStudent
+  deleteStudent,
+  getStudentAttendanceSummary,
+  GetStudentAttendanceSummaryParams,
+  GetStudentAttendanceSummaryResponse,
 } from "@/src/actions/students/actions";
 import { Student } from "@/src/types";
 
@@ -104,4 +107,31 @@ export function useDeleteStudent() {
   };
 
   return { execute, isLoading, error };
+}
+
+export function useGetStudentAttendanceSummary(params: GetStudentAttendanceSummaryParams) {
+  const [data, setData] = React.useState<GetStudentAttendanceSummaryResponse | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<Error | null>(null);
+
+  const fetchSummary = React.useCallback(async () => {
+    if (!params.studentId || !params.classId) return;
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await getStudentAttendanceSummary(params);
+      setData(response);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error("Failed to fetch student summary"));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [params.studentId, params.classId, params.startDate, params.endDate, params.page, params.pageSize]);
+
+  React.useEffect(() => {
+    fetchSummary();
+  }, [fetchSummary]);
+
+  return { data, isLoading, error, refetch: fetchSummary };
 }
